@@ -3,109 +3,110 @@ const app = express();
 const port = 4000;
 const bcrypt = require("bcryptjs");
 const session = require("express-session");
-const { Posts, User } = require("./models");
 require("dotenv").config();
 
+const { Posts, User, Comments } = require("./models");
+
 app.use((req, res, next) => {
-  console.log(`Request: ${req.method} ${req.originalUrl}`);
   res.on("finish", () => {
-    // the 'finish' event will be emitted when the response is handed over to the OS
-    console.log(`Response Status: ${res.statusCode}`);
+    console.log(`${req.method} ${req.originalUrl} ${req.statusCode}`);
   });
   next();
 });
+
 app.use(express.json());
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: {
-      maxAge: 3600000, // 1 hour
+      maxAge: 3600000,
     },
   })
 );
-const authenticateUser = (req, res, next) => {
+
+// Check if user is signed in
+const autheticateUser = (req, res, next) => {
   if (!req.session.userId) {
     return res
       .status(401)
-      .json({ message: "You must be logged in to view this page." });
+      .json({ message: "You must be logged in to view this page" });
   }
   next();
 };
 
 app.get("/", (req, res) => {
-  res.send("Welcome to the Job App Tracker API!!!!");
+  res.send("Welcome, Tarnished.");
 });
 
+// New user signup
 app.post("/signup", async (req, res) => {
   const hashedPassword = await bcrypt.hash(req.body.password, 10);
-
   try {
     const user = await User.create({
       name: req.body.name,
-      email: req.body.email,
+      username: req.body.username,
       password: hashedPassword,
     });
-    req.session.userId = user.id; // log the user in before sending response
-    res.status(201).json({
-      message: "User created!",
+    req.session.userId = user.id;
+
+    return res.status(201).json({
+      message: "User Created!",
       user: {
         name: user.name,
-        email: user.email,
+        username: user.username,
       },
     });
-  } catch (error) {
-    if (error.name === "SequelizeValidationError") {
+  } catch (err) {
+    if (err.name === "SequelizeValidationError") {
+      return res.status(422).json({ errors: err.errors.map((e) => e.message) });
+    } else if (err.name === "SequelizeUniqueConstraintError") {
       return res
         .status(422)
         .json({ errors: error.errors.map((e) => e.message) });
     }
-    console.error(error);
+    console.error(err);
     res.status(500).json({
-      message: "Error occurred while creating a new user account",
+      message: "Error occured while creating a new user account",
     });
   }
 });
 
+// User login
 app.post("/login", async (req, res) => {
   try {
-    // find the user based on the email address in the body
-    const user = await User.findOne({ where: { email: req.body.email } });
+    const user = await User.findOne({ where: { username: req.body.username } });
 
     if (user === null) {
       return res.status(401).json({
-        message: "Incorrect credentials",
+        message: "User not found",
       });
     }
 
     bcrypt.compare(req.body.password, user.password, (error, result) => {
       if (result) {
-        // passwords match
         req.session.userId = user.id;
-
-        res.status(200).json({
-          message: "Logged in successfully",
+        return res.status(200).json({
+          message: "Login successful",
           user: {
             name: user.name,
-            email: user.email,
+            username: user.username,
           },
         });
       } else {
-        // passwords don't match
-        return res.status(401).json({
-          message: "Incorrect credentials",
-        });
+        res.status(401).json({ message: "Incorrect credentials" });
       }
     });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error(err);
     res
       .status(500)
-      .json({ message: "An error occurred during the login process" });
+      .json({ message: "An error occured during the login process" });
   }
 });
 
+// User logout
 app.delete("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {
@@ -117,29 +118,27 @@ app.delete("/logout", (req, res) => {
   });
 });
 
-// Get all the jobs
-app.get("/jobs", authenticateUser, async (req, res) => {
+// Get all posts
+app.get("/posts", autheticateUser, async (req, res) => {
   try {
-    const allJobs = await Posts.findAll();
-
-    res.status(200).json(allJobs);
+    const allPosts = await Posts.findAll();
+    res.status(200).json(allPosts);
   } catch (err) {
     console.error(err);
     res.status(500).send({ message: err.message });
   }
 });
 
-// Get a specific job
-app.get("/jobs/:id", authenticateUser, async (req, res) => {
-  const jobId = parseInt(req.params.id, 10);
-
+// Get post by ID
+app.get("/posts/:postId", autheticateUser, async (req, res) => {
+  const postId = parseInt(req.params.postId, 10);
   try {
-    const job = await Posts.findOne({ where: { id: jobId } });
+    const post = await Posts.findOne({ where: { id: postId } });
 
-    if (job) {
-      res.status(200).json(job);
+    if (post) {
+      res.status(200).json(post);
     } else {
-      res.status(404).send({ message: "Job not found" });
+      res.status(404).send({ message: "post not found" });
     }
   } catch (err) {
     console.error(err);
@@ -147,12 +146,11 @@ app.get("/jobs/:id", authenticateUser, async (req, res) => {
   }
 });
 
-// Create a new job
-app.post("/jobs", authenticateUser, async (req, res) => {
+// Create a new post
+app.post("/posts", autheticateUser, async (req, res) => {
   try {
-    const newJob = await Posts.create(req.body);
-
-    res.status(201).json(newJob);
+    const newPost = await Posts.create(req.body);
+    res.status(200).json(newPost);
   } catch (err) {
     if (err.name === "SequelizeValidationError") {
       return res.status(422).json({ errors: err.errors.map((e) => e.message) });
@@ -162,26 +160,27 @@ app.post("/jobs", authenticateUser, async (req, res) => {
   }
 });
 
-// Update a specific job
-app.patch("/jobs/:id", authenticateUser, async (req, res) => {
-  const jobId = parseInt(req.params.id, 10);
-
+// Update post by ID
+app.patch("/posts/:postId", autheticateUser, async (req, res) => {
+  const postId = parseInt(req.params.postId, 10);
   try {
-    const record = await Posts.findOne({ where: { id: jobId } });
+    const record = await Posts.findOne({ where: { id: postId } });
+
     if (record && record.UserId !== parseInt(req.session.userId, 10)) {
       return res
         .status(403)
-        .json({ message: "You are not authorized to perform that action." });
+        .json({ message: "You are not authorized to perform that action" });
     }
+
     const [numberOfAffectedRows, affectedRows] = await Posts.update(req.body, {
-      where: { id: jobId },
+      where: { id: postId },
       returning: true,
     });
 
     if (numberOfAffectedRows > 0) {
       res.status(200).json(affectedRows[0]);
     } else {
-      res.status(404).send({ message: "Job not found" });
+      res.status(404).json({ message: "Post not found" });
     }
   } catch (err) {
     if (err.name === "SequelizeValidationError") {
@@ -193,22 +192,21 @@ app.patch("/jobs/:id", authenticateUser, async (req, res) => {
 });
 
 // Delete a specific job
-app.delete("/jobs/:id", authenticateUser, async (req, res) => {
-  const jobId = parseInt(req.params.id, 10);
-
+app.delete("/posts/:postId", autheticateUser, async (req, res) => {
+  const postId = parseInt(req.params.postId, 10);
   try {
-    const record = await Posts.findOne({ where: { id: jobId } });
+    const record = await Posts.findOne({ where: { id: postId } });
     if (record && record.UserId !== parseInt(req.session.userId, 10)) {
       return res
         .status(403)
-        .json({ message: "You are not authorized to perform that action." });
+        .json({ message: "You are not authorized to delete this post" });
     }
-    const deleteOp = await Posts.destroy({ where: { id: jobId } });
 
-    if (deleteOp > 0) {
-      res.status(200).send({ message: "Job deleted successfully" });
+    const deletedPost = await Posts.destroy({ where: { id: postId } });
+    if (deletedPost > 0) {
+      res.status(200).send({ message: "Post deleted successfully" });
     } else {
-      res.status(404).send({ message: "Job not found" });
+      res.status(404).send({ message: "Post not found" });
     }
   } catch (err) {
     console.error(err);
@@ -216,6 +214,158 @@ app.delete("/jobs/:id", authenticateUser, async (req, res) => {
   }
 });
 
+//Get comments from a specific post
+app.get("/posts/:postId/comments", autheticateUser, async (req, res) => {
+  const postId = parseInt(req.params.postId, 10);
+
+  try {
+    // Check if post exists
+    const post = await Posts.findOne({ where: { id: postId } });
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    const allComments = await Comments.findAll({ where: { PostId: postId } });
+    if (allComments.length > 0) {
+      return res.status(201).json(allComments);
+    } else {
+      return res.status(404).json({
+        message: "No comments found",
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error has occurred while creating comment",
+    });
+  }
+});
+
+// Get a specific comment
+app.get("/comments/:commentId", autheticateUser, async (req, res) => {
+  const commentId = parseInt(req.params.commentId, 10);
+
+  try {
+    // Check if post exists
+    const comment = await Comments.findOne({ where: { id: commentId } });
+
+    if (comment) {
+      return res.status(201).json(comment);
+    } else {
+      return res.status(404).json({
+        message: "No comments found",
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error has occurred while fetching for comment",
+    });
+  }
+});
+
+// Get all comments from a specific post
+app.post("/posts/:postId/comments", autheticateUser, async (req, res) => {
+  const postId = parseInt(req.params.postId, 10);
+
+  try {
+    // Check if the post exists
+    const post = await Posts.findOne({ where: { id: postId } });
+
+    if (!post) {
+      return res.status(404).json({ message: "The post doesn't exist" });
+    }
+    const newComment = await Comments.create({
+      content: req.body.content,
+      UserId: req.session.userId,
+      PostId: postId,
+    });
+    res.status(201).json({
+      message: "Comment created successfully",
+      comment: newComment.content,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Error has occurred while creating comment",
+    });
+  }
+});
+
+// Update comment by ID
+app.patch("/comments/:commentId", autheticateUser, async (req, res) => {
+  const commentId = parseInt(req.params.commentId, 10);
+  try {
+    const record = await Comments.findOne({ where: { id: commentId } });
+
+    if (record && record.UserId !== parseInt(req.session.userId, 10)) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to edit this comment" });
+    }
+
+    const [numberOfAffectedRows, affectedRows] = await Comments.update(
+      req.body,
+      {
+        where: { id: commentId },
+        returning: true,
+      }
+    );
+
+    if (numberOfAffectedRows > 0) {
+      res.status(200).json(affectedRows[0]);
+    } else {
+      res.status(404).json({ message: "Comment not found" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: err.message });
+  }
+});
+
+// Delete comment by ID
+app.delete("/comments/:commentId", autheticateUser, async (req, res) => {
+  const commentId = parseInt(req.params.commentId, 10);
+  try {
+    const record = await Comments.findOne({ where: { id: commentId } });
+
+    if (record && record.UserId !== parseInt(req.session.userId, 10)) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to delete this comments" });
+    }
+
+    const deletedComment = await Comments.destroy({ where: { id: commentId } });
+    if (deletedComment > 0) {
+      res.status(200).send({ message: "Comment deleted successfully" });
+    } else {
+      res.status(404).send({ message: "Comment not found" });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ message: err.message });
+  }
+});
+
+// Get all comments from current user
+app.get("/user/comments", autheticateUser, async (req, res) => {
+  try {
+    // check if the post exist
+    const allComments = await Comments.findAll({
+      where: { UserId: parseInt(req.session.userId, 10) },
+    });
+
+    if (allComments.length > 0) {
+      return res.status(201).json(allComments);
+    } else {
+      return res.status(404).json({
+        message: "No comments found",
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      message: "Error has occurred while fetching for comment",
+    });
+  }
+});
+
 app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`server is running on http://localhost:${port}`);
 });

@@ -9,6 +9,8 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      this.belongsTo(models.User);
+      this.hasMany(models.Comments, { foreignKey: "PostId" });
     }
   }
   Posts.init(
@@ -18,6 +20,15 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
       },
       content: DataTypes.STRING,
+      UserId: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        references: {
+          model: "User",
+          key: "id",
+        },
+        field: "UserId",
+      },
     },
     {
       sequelize,
