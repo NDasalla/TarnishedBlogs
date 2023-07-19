@@ -6,10 +6,14 @@ This README will provide steps of a user on a Windows machine. This project will
 
 To get started, open your repository in Visual Studio Code, or any other code editing software you'd like, but be warned, this project was created and maintained primarily through VSCODE, so it will be easier to follow along if you also use VSCODE.
 
-Run the following in the terminal, and make sure you are located in the correct directory, which should be the directory in which the files are contained:
-`npm i`
+Run the following in the terminal, and make sure you are located in the `backend` directory as we will only be creating the backend, for now:
+```
+npm i
+```
 Or
-`npm install`
+```
+npm install
+```
 
 The command you just ran scanned your package.json file and installed all of the needed dependencies and development dependencies inside of a `node_modules` folder. You will also need to create a `.env` file and `.gitignore` file inside the root of your directory, the same directory as your package.json file.
 
