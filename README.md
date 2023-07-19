@@ -29,8 +29,12 @@ Now we will get into implenting Postgres and the rest of the backend into the pr
 After successfully downloading Postgres, you should be able to search up and find a new PostgreSQL Shell called `psql`. If you are on windows and want to run `psql` on command prompt, you will have to add new paths into your environment variables. You can find out how to do this online, for now, you can simply follow through the psql shell.
 
 If the first thing you see upon opening up the shell is:
-`Server [localhost]:`
-Then press enter 4 times, upon which you should see:
+
+```
+Server [localhost]:
+```
+
+Press enter 4 times, upon which you should see:
 
 ```
 Server [localhost]:
@@ -101,6 +105,14 @@ DB_PORT=5432
 SESSION_SECRET=...
 ```
 
+Replace all of the required values. As for the `SESSION_SECRET`, in the terminal type in `node` and press `enter`. Then, enter the following command:
+
+```
+require("crypto").randomBytes(64).toString("hex")
+```
+
+Enter this value, excluding the single quotes, as the `SESSION_SECRET` value.
+
 ### Sequelize
 
 Now that your database is up, you will now implement `Sequelize` into your project. All of the required sequelize dependencies should have already been installed, so simply run:
@@ -119,7 +131,19 @@ If you have the PostgreSQL extension by Chris Kolkman, you can go into the exten
 
 Click on the database, `tarnished_blogs` -> `public`, then you should see a `Functions` dropdown, and four tables, `SequelizeMeta`, `comments`, `posts`, and `users`, respectively. Right-click on either of the four tables, click `Select` then `Run Select Top 1000`. You should see data provided by the seed file.
 
-## Tables
+## Testing
+
+### Postman
+
+For testing, you can use Postman as it is also what I used for testing the functionality of my program. First, download Postman then start the server through:
+
+```
+npm start
+```
+
+Then, use [this](https://restless-station-14503.postman.co/workspace/New-Team-Workspace~39dc5111-75dc-40f7-b5dd-cffa20c10f0c/collection/28425494-ed61216b-c335-4a75-a07c-acce886cf614?action=share&creator=28425494) Postman collection to test out the database.
+
+## Miscellaneous
 
 ### Models
 
