@@ -11,22 +11,22 @@ Run the following in the terminal, and make sure you are located in the correct 
 Or
 `npm install`
 
-The command you just ran scanned your package.json file and installed all of the needed dependencies and development dependencies inside of a "node_modules" folder. You will also need to create a ".env" file and ".gitignore" file inside the root of your directory, the same directory as your package.json file.
+The command you just ran scanned your package.json file and installed all of the needed dependencies and development dependencies inside of a `node_modules` folder. You will also need to create a `.env` file and `.gitignore` file inside the root of your directory, the same directory as your package.json file.
 
-You ".env" file will remain empty for now. Inside of your .gitignore file, copy and paste the following:
+You `.env` file will remain empty for now. Inside of your `.gitignore` file, copy and paste the following:
 
 ```
 .env
 node_modules
 ```
 
-Doing this will ensure that the speficied files you entered into this ".gitignore" file will not be tracked because the information the will be stored in your ".env" are sensitive information that you do not want to share to others, especially the internet. We gitignored the "node_modules" folder because they size is too big and can simply be gotten through the `npm install` command.
+Doing this will ensure that the speficied files you entered into this `.gitignore` file will not be tracked because the information the will be stored in your `.env` are sensitive information that you do not want to share to others, especially the internet. We gitignored the `node_modules` folder because they size is too big and can simply be gotten through the `npm install` command.
 
 ### PostgreSQL
 
-Now we will get into implenting Postgres and the rest of the backend into the project. You can begin by installing [Postgres](https://www.postgresql.org/download/) on your computer. During the installation process, you will be prompted to created a password, which will be associated with the "postgres" superuser. Remember this password or write it down somewhere as it is very important.
+Now we will get into implenting Postgres and the rest of the backend into the project. You can begin by installing [Postgres](https://www.postgresql.org/download/) on your computer. During the installation process, you will be prompted to created a password, which will be associated with the `postgres` superuser. Remember this password or write it down somewhere as it is very important.
 
-After successfully downloading Postgres, you should be able to search up and find a new PostgreSQL Shell called "psql". If you are on windows and want to run "psql" on command prompt, you will have to add new paths into your environment variables. You can find out how to do this online, for now, you can simply follow through the psql shell.
+After successfully downloading Postgres, you should be able to search up and find a new PostgreSQL Shell called `psql`. If you are on windows and want to run `psql` on command prompt, you will have to add new paths into your environment variables. You can find out how to do this online, for now, you can simply follow through the psql shell.
 
 If the first thing you see upon opening up the shell is:
 `Server [localhost]:`
@@ -52,7 +52,7 @@ Type "help" for help.
 postgres=#
 ```
 
-Now, create a new user. (Replace "<database user name>" and "<password>" with your desired username and password. DO NOT include the angle brackets in ANY commands):
+Now, create a new user. (Replace `<database user name>` and `<password>` with your desired username and password. DO NOT include the angle brackets in ANY commands):
 
 ```
 CREATE ROLE <database user name> WITH LOGIN PASSWORD '<password>';
