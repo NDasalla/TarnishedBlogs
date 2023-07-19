@@ -143,6 +143,8 @@ npm start
 
 Then, use [this](https://restless-station-14503.postman.co/workspace/New-Team-Workspace~39dc5111-75dc-40f7-b5dd-cffa20c10f0c/collection/28425494-ed61216b-c335-4a75-a07c-acce886cf614?action=share&creator=28425494) Postman collection to test out the database.
 
+My testing showed all CRUD operations to work as expected.
+
 ## Miscellaneous
 
 ### Models
@@ -169,5 +171,3 @@ Sequelize Command:
 ```
 npx sequelize-cli model:generate --name Posts --attributes title:string,content:string
 ```
-
-#### Comments
